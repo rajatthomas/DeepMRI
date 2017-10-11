@@ -28,20 +28,20 @@ def deep_mri_net(input_shape, conv_params, max_pool_params, fc_params, dropout_p
     input_to_network = Input(input_shape, batch_shape=None, dtype=input_dtype, name='input_layer')
     layer_input = input_to_network
 
-    for i in xrange(n_conv):
+    for i in range(n_conv):
         conv_layer_params = conv_params[i]
         max_pool_layer_params = max_pool_params[i]
         layer_input = conv_layers(layer_input, conv_layer_params, max_pool_layer_params, i=i+1)
 
     layer_input = Flatten(name='flatten')(layer_input)
 
-    for i in xrange(n_fc):
+    for i in range(n_fc):
         fc_layer_params = fc_params[i]
         dropout_val = dropout_params.get(i + 1, False)
         layer_input = fully_connected(layer_input, fc_layer_params, dropout=dropout_val, i=i+1)
 
     outputs_network = []
-    for i in xrange(n_output):
+    for i in range(n_output):
         output_layer_params = output_params[i]
         outputs_network.append(output_layers(layer_input, output_layer_params, i=i+1))
 
@@ -82,8 +82,8 @@ def fully_connected(x, fc_params, dropout=False, i=1, final_layer=False):
     return x
 
 
-def init_network(n_classes=2):
-    input_shape = (30, 36, 30, 1)
+def init_network(n_classes=2, input_shape=(61, 73, 61, 1)):
+
     input_dtype = K.floatx()
 
     conv_params = [
@@ -117,13 +117,13 @@ def init_network(n_classes=2):
     # loss = ['categorical_crossentropy', 'mean_squared_error']
     # loss_weights = [1., 0.001]
 
-    # dropout_params = None
+    dropout_params = None
     # dropout_params = {1: 0.9, 2: 0.5}
     # dropout_params = {1: 0.5, 2: 0.3}
     # dropout_params = {1: 0.9}
-    dropout_params = {1: 0.5, 2: 0.5, 3: 0.5}
+    # dropout_params = {1: 0.5, 2: 0.5, 3: 0.5}
 
-    model = deep_neurologe_net(input_shape, conv_params, maxpooling_params, fc_params, dropout_params, output_params,
+    model = deep_mri_net(input_shape, conv_params, maxpooling_params, fc_params, dropout_params, output_params,
                                input_dtype)
     model.compile(optimizer='adam', loss=loss, metrics=['accuracy', balanced_accuracy], loss_weights=loss_weights)
     model.summary()

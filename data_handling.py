@@ -9,8 +9,8 @@ import nibabel as nib
 from deepMRI_keras import init_network
 
 
-def get_network(n_classes=2):
-    return init_network(n_classes=n_classes)
+def get_network(n_classes=2, input_shape=(61, 73, 61, 1)):
+    return init_network(n_classes=n_classes, input_shape=input_shape)
 
 
 def atleast_5d(arr):

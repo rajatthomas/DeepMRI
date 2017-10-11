@@ -28,7 +28,8 @@ def run(data_folder, data_file, metric, save_folder, batch_size=20):
         print('Valid: Class 1: {}; Class 0: {}'.format(np.sum(y_valid == 1), np.sum(y_valid == 0)))
         print('Test: Class 1: {}; Class 0: {}'.format(np.sum(y_test == 1), np.sum(y_test == 0)))
 
-        network = get_network(n_classes=np.unique(y).size)
+        input_shape = X_train.shape[1:]
+        network = get_network(n_classes=np.unique(y).size, input_shape=input_shape)
 
         mean_train = X_train.mean(axis=0, keepdims=True)
         std_train = X_train.std(axis=0, keepdims=True)
@@ -45,6 +46,7 @@ def run(data_folder, data_file, metric, save_folder, batch_size=20):
         csv_logger = CSVLogger(osp.join(save_folder, 'training{}.log'.format(i_cv + 1)))
         tensorboard = TensorBoard(log_dir=osp.join(save_folder, 'tensorboard{}'.format(i_cv + 1)), histogram_freq=0,
                                   write_graph=True, write_images=True)
+
 
         network.fit(x=X_train, y=y_train, batch_size=batch_size, epochs=1000, verbose=1,
                     validation_data=(X_valid, y_valid), shuffle=True,
