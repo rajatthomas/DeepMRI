@@ -73,15 +73,17 @@ def get_entropy(series, nbins=15):
     return entropy
 
 
-def get_autocorr(series, lag_cc = 0.5):
+def get_autocorr(series, lag_cc=0.5):
     """
 
     :param series: time course
     :param lag_cc: width to be determined at lag=lag_cc
     :return:
     """
+    cc = np.abs(np.correlate(series, series, mode='full'))
+    cc = cc/cc.max()
+    cc = np.abs(cc-lag_cc)
 
-    cc = np.abs(np.correlate(series, series, mode='full')-lag_cc)
     return np.argsort(cc)[0] - len(cc) # because max cc is at len(cc)
 
 
@@ -178,12 +180,12 @@ def create_hdf5_file(func_subject_vars, struct_subject_vars, hdf5_dir, hdf5_file
             if 'autocorr' in metrics:
                 summary_img = convert2summary(v[0], v[1], metric='autocorr')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
-                fmri_entropy[sub_id, :, :, :] = summary_img
+                fmri_autocorr[sub_id, :, :, :] = summary_img
 
             if 'entropy' in metrics:
                 summary_img = convert2summary(v[0], v[1], metric='entropy')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
-                fmri_autocorr[sub_id, :, :, :] = summary_img
+                fmri_entropy[sub_id, :, :, :] = summary_img
 
             sub_labels_func.append(v[-1])  # Diagnosis is the last element
             abide_ids_func.append(k)
