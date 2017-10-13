@@ -31,7 +31,12 @@ def load_data(data_folder, h5_filename, metric='entropy'):
     hFile = h5py.File(osp.join(data_folder, h5_filename), 'r')
     data_loc = osp.join(u'summaries', u'data_{}'.format(metric))
 
-    return hFile['summaries'].attrs['labels'], atleast_5d(hFile[data_loc][()])  # [()] makes it numpy array
+    if metric == 'structural':
+        labels = hFile['summaries'].attrs['struct_labels']
+    else:
+        labels = hFile['summaries'].attrs['func_labels']
+
+    return labels, atleast_5d(hFile[data_loc][()])  # [()] makes it numpy array
 
 
 def get_data(parent_folder, tag, file_name):

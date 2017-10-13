@@ -8,16 +8,17 @@ from keras.callbacks import EarlyStopping, CSVLogger, TensorBoard
 from data_handling import load_data, get_network
 
 
-def run(data_folder, data_file, metric, save_folder, batch_size=20):
+def run(data_folder, data_file, metric, save_folder, batch_size=10):
     if not osp.exists(save_folder):
         os.makedirs(save_folder)
 
     y, X = load_data(data_folder, data_file, metric=metric)
+
     cv = StratifiedKFold(n_splits=10, shuffle=True)
     metrics_test = np.zeros((cv.get_n_splits(X, y), 3))
     print(save_folder)
     print('Batch size: {}'.format(batch_size))
-
+    # import pdb; pdb.set_trace()
     for (i_cv, (train_id, test_id)) in enumerate(cv.split(X, y)):
         print('{}/{}'.format(i_cv + 1, cv.get_n_splits(X, y)))
         X_train, X_test = X[train_id], X[test_id]
@@ -89,7 +90,7 @@ def run_final_model(X, y, batch_size):
 if __name__ == '__main__':
     data_dir = '/data/local/deeplearning/DeepPsychNet/abide_I_data/hdf5_data'
     data_file = 'fmri_summary.hdf5'
-    metric = 'entropy'
+    metric = 'structural'  # 'autocorr'  # ''entropy'
 
     save_dir = osp.join(data_dir, '5layers_10cv_dropout_all_fc')
     run(data_folder=data_dir, data_file=data_file, save_folder=save_dir, metric=metric)
