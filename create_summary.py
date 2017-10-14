@@ -11,12 +11,13 @@ from scipy.special import xlogy
 
 
 def subject_dict(data_dir, abide_struct_path, abide_fmri_path, abide_mask_path, pheno_file,
-                 abide_metrics=['alff', 'degree_binarized', 'degree_weighted', 'eigenvector_weighted','falff', 'lfcd']):
+                 abide_metrics=['alff', 'degree_weighted', 'eigenvector_weighted','falff', 'lfcd']):
     """
 
     :param data_dir: path to main directory
     :param abide_fmri_path: path to abide fMRI specific directory
     :param abide_mask_path: path to abide functional mask specific directory
+    :param abide_metrics: all metrics given by abide preprocessed
     :param pheno_file: file with the phenotypical variable
 
     :return: dictionary with subject_ids as keys and [file_path_fmri, file_path_mask, diagnosis] as value
@@ -26,8 +27,9 @@ def subject_dict(data_dir, abide_struct_path, abide_fmri_path, abide_mask_path, 
     all_struct_files = sorted(glob(os.path.join(data_dir, abide_struct_path, '*.nii')))
 
     all_metrics_file = []
+    metric_path = 'Outputs/cpac/filt_noglobal'
     for metric in abide_metrics:
-        all_metrics_file.append(sorted(glob(os.path.join(data_dir, metric, '*.nii.gz'))))
+        all_metrics_file.append(sorted(glob(os.path.join(data_dir, metric_path, metric, '*.nii.gz'))))
 
     pheno_data = pd.read_csv(os.path.join(data_dir, pheno_file))
 
@@ -54,13 +56,11 @@ def subject_dict(data_dir, abide_struct_path, abide_fmri_path, abide_mask_path, 
         sub_id = int(sub_id_str)
 
         if autistic_ids.isin([sub_id]).any():
-            func_subject_vars[sub_id] = {'rsfmri': f, 'mask': m, 'alff': a, 'degree_binarized': db,
-                                         'degree_weighted': dw, 'eigenvector_weighted': ew, 'falff': fa, 'lfcd': l,
-                                         'DX': 1}
+            func_subject_vars[sub_id] = {'rsfmri': f, 'mask': m, 'alff': a, 'degree_weighted': dw,
+                                         'eigenvector_weighted': ew, 'falff': fa, 'lfcd': l, 'DX': 1}
         if control_ids.isin([sub_id]).any():
-            func_subject_vars[sub_id] = {'rsfmri': f, 'mask': m, 'alff': a, 'degree_binarized': db,
-                                         'degree_weighted': dw, 'eigenvector_weighted': ew, 'falff': fa, 'lfcd': l,
-                                         'DX': 0}
+            func_subject_vars[sub_id] = {'rsfmri': f, 'mask': m, 'alff': a, 'degree_weighted': dw,
+                                         'eigenvector_weighted': ew, 'falff': fa, 'lfcd': l, 'DX': 0}
 
     return func_subject_vars, struct_subject_vars
 
@@ -103,7 +103,7 @@ def convert2summary(data_nifti, mask_nifti=None, metric='entropy'):
     :return: 3D nifti-file with entropy values in each voxels.
     """
 
-    all_abide_metrics: ['alff', 'degree_binarized', 'degree_weighted', 'eigenvector_weighted', 'falff', 'lfcd']
+    all_abide_metrics = ['alff', 'degree_weighted', 'eigenvector_weighted', 'falff', 'lfcd']
     data = nib.load(data_nifti).get_data()
     voxelwise_measure = []
 
@@ -173,17 +173,13 @@ def create_hdf5_file(func_subject_vars, struct_subject_vars, hdf5_dir, hdf5_file
             fmri_alff = entry.create_dataset(u'data_alff', shape=(nsubjs,) + data_shape + (1,),
                                                  dtype=np.float32)
 
-        if 'degree_binarized' in metrics:
-            fmri_degree_binarized = entry.create_dataset(u'data_degree_binarized', shape=(nsubjs,) + data_shape + (1,),
-                                                 dtype=np.float32)
-
         if 'degree_weighted' in metrics:
             fmri_degree_weighted = entry.create_dataset(u'data_degree_weighted', shape=(nsubjs,) + data_shape + (1,),
-                                                         dtype=np.float32)
+                                                        dtype=np.float32)
 
         if 'eigenvector_weighted' in metrics:
             fmri_eigenvector_weighted = entry.create_dataset(u'data_eigenvector_weighted', shape=(nsubjs,) + data_shape + (1,),
-                                                         dtype=np.float32)
+                                                             dtype=np.float32)
 
         if 'falff' in metrics:
             fmri_falff = entry.create_dataset(u'data_falff', shape=(nsubjs,) + data_shape + (1,),
@@ -230,10 +226,6 @@ def create_hdf5_file(func_subject_vars, struct_subject_vars, hdf5_dir, hdf5_file
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_alff[sub_id, :, :, :] = summary_img
 
-            if 'degree_binarized' in metrics:
-                summary_img = convert2summary(v['degree_binarized'], metric='degree_binarized')
-                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
-                fmri_degree_binarized[sub_id, :, :, :] = summary_img
 
             if 'degree_weighted' in metrics:
                 summary_img = convert2summary(v['degree_weighted'], v['mask'], metric='degree_weighted')
@@ -273,7 +265,9 @@ def get_data_shape(func_subject_vars, struct_subject_vars):
     :return: shape of the 3D output
     """
     # Get any value
-    _, m, _ = next(iter(func_subject_vars.values()))
+    v = next(iter(func_subject_vars.values()))
+    m = v['mask']
+
     s, _ = next(iter(struct_subject_vars.values()))
 
     return nib.load(m).shape, nib.load(s).shape
@@ -290,8 +284,7 @@ def run():
     output_hdf5_dir  = os.path.join(data_dir, 'hdf5_data')
     output_hdf5_file = 'fmri_summary.hdf5'
 
-    all_metrics = ['structural', 'entropy', 'autocorr','alff', 'degree_binarized', 'degree_weighted',
-                   'eigenvector_weighted', 'falff', 'lfcd']
+    all_metrics = ['structural', 'entropy', 'autocorr', 'alff', 'degree_weighted', 'eigenvector_weighted', 'falff', 'lfcd']
 
     func_subject_vars, struct_subject_vars = subject_dict(data_dir, abide_struct_dir, abide_rsfmri_dir, abide_funcmask_dir, pheno_file)
     create_hdf5_file(func_subject_vars, struct_subject_vars, output_hdf5_dir, output_hdf5_file, metrics=all_metrics)
