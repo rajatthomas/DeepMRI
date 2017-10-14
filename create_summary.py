@@ -10,7 +10,8 @@ import h5py
 from scipy.special import xlogy
 
 
-def subject_dict(data_dir, abide_struct_path, abide_fmri_path, abide_mask_path, pheno_file):
+def subject_dict(data_dir, abide_struct_path, abide_fmri_path, abide_mask_path, pheno_file,
+                 abide_metrics=['alff', 'degree_binarized', 'degree_weighted', 'eigenvector_weighted','falff', 'lfcd']):
     """
 
     :param data_dir: path to main directory
@@ -20,9 +21,13 @@ def subject_dict(data_dir, abide_struct_path, abide_fmri_path, abide_mask_path, 
 
     :return: dictionary with subject_ids as keys and [file_path_fmri, file_path_mask, diagnosis] as value
     """
-    all_fmri_files  = sorted(glob(os.path.join(data_dir, abide_fmri_path, '*.nii.gz')))
-    all_mask_files  = sorted(glob(os.path.join(data_dir, abide_mask_path, '*.nii.gz')))
-    all_struct_files  = sorted(glob(os.path.join(data_dir, abide_struct_path, '*.nii')))
+    all_fmri_files = sorted(glob(os.path.join(data_dir, abide_fmri_path, '*.nii.gz')))
+    all_mask_files = sorted(glob(os.path.join(data_dir, abide_mask_path, '*.nii.gz')))
+    all_struct_files = sorted(glob(os.path.join(data_dir, abide_struct_path, '*.nii')))
+
+    all_metrics_file = []
+    for metric in abide_metrics:
+        all_metrics_file.append(sorted(glob(os.path.join(data_dir, metric, '*.nii.gz'))))
 
     pheno_data = pd.read_csv(os.path.join(data_dir, pheno_file))
 
@@ -44,15 +49,18 @@ def subject_dict(data_dir, abide_struct_path, abide_fmri_path, abide_mask_path, 
         if control_ids.isin([sub_id]).any():
             struct_subject_vars[sub_id] = [s, 0]
 
-    for f, m in zip(all_fmri_files, all_mask_files):
+    for f, m, a, db, dw, ew, fa, l in zip(all_fmri_files, all_mask_files, *all_metrics_file):
         sub_id_str = f.split('_')[-3]
         sub_id = int(sub_id_str)
 
         if autistic_ids.isin([sub_id]).any():
-            func_subject_vars[sub_id] = [f, m, 1]
-
+            func_subject_vars[sub_id] = {'rsfmri': f, 'mask': m, 'alff': a, 'degree_binarized': db,
+                                         'degree_weighted': dw, 'eigenvector_weighted': ew, 'falff': fa, 'lfcd': l,
+                                         'DX': 1}
         if control_ids.isin([sub_id]).any():
-            func_subject_vars[sub_id] = [f, m, 0]
+            func_subject_vars[sub_id] = {'rsfmri': f, 'mask': m, 'alff': a, 'degree_binarized': db,
+                                         'degree_weighted': dw, 'eigenvector_weighted': ew, 'falff': fa, 'lfcd': l,
+                                         'DX': 0}
 
     return func_subject_vars, struct_subject_vars
 
@@ -87,15 +95,16 @@ def get_autocorr(series, lag_cc=0.5):
     return np.argsort(cc)[0] - len(cc) # because max cc is at len(cc)
 
 
-def convert2summary(fmri_nifti, mask_nifti=None, metric='entropy'):
+def convert2summary(data_nifti, mask_nifti=None, metric='entropy'):
     """
 
-    :param fmri_nifti: path to the 4-D resting-state functional scan.
+    :param data_nifti: path to the 4-D resting-state or other abide summary scans.
     :param mask_nifti: path to the 3-D functional mask.
     :return: 3D nifti-file with entropy values in each voxels.
     """
 
-    data = nib.load(fmri_nifti).get_data()
+    all_abide_metrics: ['alff', 'degree_binarized', 'degree_weighted', 'eigenvector_weighted', 'falff', 'lfcd']
+    data = nib.load(data_nifti).get_data()
     voxelwise_measure = []
 
     if mask_nifti is not None: # functional data
@@ -109,6 +118,9 @@ def convert2summary(fmri_nifti, mask_nifti=None, metric='entropy'):
 
             if metric == 'autocorr':
                 voxelwise_measure[i, j, k] = np.float32(get_autocorr(data[i, j, k, :]))
+
+    if metric in all_abide_metrics:
+        voxelwise_measure = data
 
     # for structural no calculations required
     if metric == 'structural':
@@ -204,47 +216,42 @@ def create_hdf5_file(func_subject_vars, struct_subject_vars, hdf5_dir, hdf5_file
             t1 = time()
 
             if 'autocorr' in metrics:
-                summary_img = convert2summary(v[0], v[1], metric='autocorr')
+                summary_img = convert2summary(v['rsfmri'], v['mask'], metric='autocorr')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_autocorr[sub_id, :, :, :] = summary_img
 
+            if 'entropy' in metrics:
+                summary_img = convert2summary(v['rsfmri'], v['mask'], metric='entropy')
+                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
+                fmri_entropy[sub_id, :, :, :] = summary_img
+
             if 'alff' in metrics:
-                summary_img = convert2summary(v[0], v[1], metric='alff')
+                summary_img = convert2summary(v['alff'], metric='alff')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_alff[sub_id, :, :, :] = summary_img
 
-            if 'entropy' in metrics:
-                summary_img = convert2summary(v[0], v[1], metric='entropy')
-                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
-                fmri_entropy[sub_id, :, :, :] = summary_img
-
-            if 'alff' in metrics:
-                summary_img = convert2summary(v[0], v[1], metric='alff')
-                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
-                fmri_entropy[sub_id, :, :, :] = summary_img
-
             if 'degree_binarized' in metrics:
-                summary_img = convert2summary(v[0], v[1], metric='degree_binarized')
+                summary_img = convert2summary(v['degree_binarized'], metric='degree_binarized')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_degree_binarized[sub_id, :, :, :] = summary_img
 
             if 'degree_weighted' in metrics:
-                summary_img = convert2summary(v[0], v[1], metric='degree_weighted')
+                summary_img = convert2summary(v['degree_weighted'], v['mask'], metric='degree_weighted')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_degree_weighted[sub_id, :, :, :] = summary_img
 
             if 'eigenvector_weighted' in metrics:
-                summary_img = convert2summary(v[0], v[1], metric='eigenvector_weighted')
+                summary_img = convert2summary(v['eigenvector_weighted'], metric='eigenvector_weighted')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_eigenvector_weighted[sub_id, :, :, :] = summary_img
 
             if 'falff' in metrics:
-                summary_img = convert2summary(v[0], v[1], metric='falff')
+                summary_img = convert2summary(v['falff'], metric='falff')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_falff[sub_id, :, :, :] = summary_img
 
             if 'lfcd' in metrics:
-                summary_img = convert2summary(v[0], v[1], metric='lfcd')
+                summary_img = convert2summary(v['lfcd'], metric='lfcd')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_lfcd[sub_id, :, :, :] = summary_img
 
@@ -283,7 +290,9 @@ def run():
     output_hdf5_dir  = os.path.join(data_dir, 'hdf5_data')
     output_hdf5_file = 'fmri_summary.hdf5'
 
-    all_metrics = ['structural', 'alff', 'degree_binarized', 'degree_weighted', 'eigenvector_weighted', 'falff', 'lfcd']
+    all_metrics = ['structural', 'entropy', 'autocorr','alff', 'degree_binarized', 'degree_weighted',
+                   'eigenvector_weighted', 'falff', 'lfcd']
+
     func_subject_vars, struct_subject_vars = subject_dict(data_dir, abide_struct_dir, abide_rsfmri_dir, abide_funcmask_dir, pheno_file)
     create_hdf5_file(func_subject_vars, struct_subject_vars, output_hdf5_dir, output_hdf5_file, metrics=all_metrics)
 
