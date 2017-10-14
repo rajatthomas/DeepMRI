@@ -154,7 +154,32 @@ def create_hdf5_file(func_subject_vars, struct_subject_vars, hdf5_dir, hdf5_file
             fmri_entropy = entry.create_dataset(u'data_entropy', shape=(nsubjs, ) + data_shape + (1,), dtype=np.float32)
 
         if 'autocorr' in metrics:
-            fmri_autocorr = entry.create_dataset(u'data_autocorr', shape=(nsubjs,) + data_shape + (1,), dtype=np.float32)
+            fmri_autocorr = entry.create_dataset(u'data_autocorr', shape=(nsubjs,) + data_shape + (1,),
+                                                 dtype=np.float32)
+
+        if 'alff' in metrics:
+            fmri_alff = entry.create_dataset(u'data_alff', shape=(nsubjs,) + data_shape + (1,),
+                                                 dtype=np.float32)
+
+        if 'degree_binarized' in metrics:
+            fmri_degree_binarized = entry.create_dataset(u'data_degree_binarized', shape=(nsubjs,) + data_shape + (1,),
+                                                 dtype=np.float32)
+
+        if 'degree_weighted' in metrics:
+            fmri_degree_weighted = entry.create_dataset(u'data_degree_weighted', shape=(nsubjs,) + data_shape + (1,),
+                                                         dtype=np.float32)
+
+        if 'eigenvector_weighted' in metrics:
+            fmri_eigenvector_weighted = entry.create_dataset(u'data_eigenvector_weighted', shape=(nsubjs,) + data_shape + (1,),
+                                                         dtype=np.float32)
+
+        if 'falff' in metrics:
+            fmri_falff = entry.create_dataset(u'data_falff', shape=(nsubjs,) + data_shape + (1,),
+                                                 dtype=np.float32)
+
+        if 'lfcd' in metrics:
+            fmri_lfcd = entry.create_dataset(u'data_lfcd', shape=(nsubjs,) + data_shape + (1,),
+                                                 dtype=np.float32)
 
         if 'structural' in metrics:
             mri_struct = entry.create_dataset(u'data_structural', shape=(struct_nsubjs,) + struct_data_shape + (1,), dtype=np.float32)
@@ -183,10 +208,45 @@ def create_hdf5_file(func_subject_vars, struct_subject_vars, hdf5_dir, hdf5_file
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_autocorr[sub_id, :, :, :] = summary_img
 
+            if 'alff' in metrics:
+                summary_img = convert2summary(v[0], v[1], metric='alff')
+                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
+                fmri_alff[sub_id, :, :, :] = summary_img
+
             if 'entropy' in metrics:
                 summary_img = convert2summary(v[0], v[1], metric='entropy')
                 summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
                 fmri_entropy[sub_id, :, :, :] = summary_img
+
+            if 'alff' in metrics:
+                summary_img = convert2summary(v[0], v[1], metric='alff')
+                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
+                fmri_entropy[sub_id, :, :, :] = summary_img
+
+            if 'degree_binarized' in metrics:
+                summary_img = convert2summary(v[0], v[1], metric='degree_binarized')
+                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
+                fmri_degree_binarized[sub_id, :, :, :] = summary_img
+
+            if 'degree_weighted' in metrics:
+                summary_img = convert2summary(v[0], v[1], metric='degree_weighted')
+                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
+                fmri_degree_weighted[sub_id, :, :, :] = summary_img
+
+            if 'eigenvector_weighted' in metrics:
+                summary_img = convert2summary(v[0], v[1], metric='eigenvector_weighted')
+                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
+                fmri_eigenvector_weighted[sub_id, :, :, :] = summary_img
+
+            if 'falff' in metrics:
+                summary_img = convert2summary(v[0], v[1], metric='falff')
+                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
+                fmri_falff[sub_id, :, :, :] = summary_img
+
+            if 'lfcd' in metrics:
+                summary_img = convert2summary(v[0], v[1], metric='lfcd')
+                summary_img = np.array(summary_img, dtype=np.float32)[:, :, :, np.newaxis]
+                fmri_lfcd[sub_id, :, :, :] = summary_img
 
             sub_labels_func.append(v[-1])  # Diagnosis is the last element
             abide_ids_func.append(k)
@@ -223,8 +283,10 @@ def run():
     output_hdf5_dir  = os.path.join(data_dir, 'hdf5_data')
     output_hdf5_file = 'fmri_summary.hdf5'
 
+    all_metrics = ['structural', 'alff', 'degree_binarized', 'degree_weighted', 'eigenvector_weighted', 'falff', 'lfcd']
     func_subject_vars, struct_subject_vars = subject_dict(data_dir, abide_struct_dir, abide_rsfmri_dir, abide_funcmask_dir, pheno_file)
-    create_hdf5_file(func_subject_vars, struct_subject_vars, output_hdf5_dir, output_hdf5_file, metrics=['entropy', 'autocorr', 'structural'])
+    create_hdf5_file(func_subject_vars, struct_subject_vars, output_hdf5_dir, output_hdf5_file, metrics=all_metrics)
+
 
 if __name__ == '__main__':
     run()
