@@ -100,19 +100,20 @@ def convert2summary(fmri_nifti, mask_nifti=None, metric='entropy'):
 
     if mask_nifti is not None: # functional data
         mask = nib.load(mask_nifti).get_data()
-        voxelwise_measure = np.zeros_like(mask)
+        voxelwise_measure = np.zeros_like(mask,dtype=np.float32)
         x_axis, y_axis, z_axis = mask.nonzero()
 
         for i, j, k in zip(x_axis, y_axis, z_axis):
             if metric == 'entropy':
                 voxelwise_measure[i, j, k] = get_entropy(data[i, j, k, :])
 
-            if metric == 'autcorr':
-                voxelwise_measure[i, j, k] = get_autocorr(data[i, j, k, :])
+            if metric == 'autocorr':
+                voxelwise_measure[i, j, k] = np.float32(get_autocorr(data[i, j, k, :]))
 
     # for structural no calculations required
     if metric == 'structural':
         voxelwise_measure = data
+
 
     return voxelwise_measure
 
