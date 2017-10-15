@@ -1,3 +1,4 @@
+from comet_ml import Experiment
 from sklearn.model_selection import train_test_split, StratifiedKFold
 import numpy as np
 import os
@@ -48,7 +49,6 @@ def run(data_folder, data_file, metric, save_folder, batch_size=10):
         tensorboard = TensorBoard(log_dir=osp.join(save_folder, 'tensorboard{}'.format(i_cv + 1)), histogram_freq=0,
                                   write_graph=True, write_images=True)
 
-
         network.fit(x=X_train, y=y_train, batch_size=batch_size, epochs=1000, verbose=1,
                     validation_data=(X_valid, y_valid), shuffle=True,
                     callbacks=[early_stopping, csv_logger, tensorboard])
@@ -90,7 +90,9 @@ def run_final_model(X, y, batch_size):
 if __name__ == '__main__':
     data_dir = '/data/local/deeplearning/DeepPsychNet/abide_I_data/hdf5_data'
     data_file = 'fmri_summary.hdf5'
-    metric = 'structural'  # 'autocorr'  # ''entropy'
+    metric = 'lfcd'  # 'structural'  # 'autocorr'  # ''entropy'
 
     save_dir = osp.join(data_dir, '5layers_10cv_dropout_all_fc')
+
+    experiment = Experiment(api_key="GVJBMG0SIOoH7zp6Lh9cW0JbB", log_code=True)
     run(data_folder=data_dir, data_file=data_file, save_folder=save_dir, metric=metric)
