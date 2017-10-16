@@ -19,7 +19,11 @@ def atleast_5d(arr):
     return arr
 
 
-def load_data(data_folder, h5_filename, metric='entropy'):
+def get_func_labels():
+    return ['alff', 'degree_weighted', 'eigenvector_weighted', 'falff', 'lfcd']
+
+
+def load_data(data_folder, h5_filename, metric='entropy', standardize_subjects=False):
     """
 
     :param data_folder: Folder of the HDF5 file containing rsfMRI summaries
@@ -29,14 +33,39 @@ def load_data(data_folder, h5_filename, metric='entropy'):
     """
 
     hFile = h5py.File(osp.join(data_folder, h5_filename), 'r')
-    data_loc = osp.join(u'summaries', u'data_{}'.format(metric))
+
+    if metric == "all":
+        func_metrics = get_func_labels()
+        data_all = []
+        for func_metric in func_metrics:
+            data_loc = osp.join(u'summaries', u'data_{}'.format(func_metric))
+            data_all.append(atleast_5d(hFile[data_loc][()]))  # [()] makes it numpy array
+        data = np.concatenate(data_all, axis=4)
+    else:
+        if metric in get_func_labels():
+            data_loc = osp.join(u'summaries', u'data_{}'.format(metric))
+            data = atleast_5d(hFile[data_loc][()]) # [()] makes it numpy array
+        else:
+            raise RuntimeError('{} not implemented'.format(metric))
+
+    if standardize_subjects:
+        mask = np.array(nib.load(osp.join(data_folder, 'maskAll.nii.gz')).get_data(), dtype=np.bool)
+        n_subj = data.shape[0]
+
+        for i_subj in range(n_subj):
+            data_subj = data[i_subj]
+            mean_subj = data_subj[mask, :].mean(axis=0)
+            std_subj = data_subj[mask, :].std(axis=0)
+            if np.any(std_subj == 0) or np.any(np.isnan(mean_subj)) or np.any(np.isnan(std_subj)):
+                import pdb; pdb.set_trace()
+            data[i_subj] = mask[..., np.newaxis] * (data_subj - mean_subj)/std_subj
 
     if metric == 'structural':
         labels = hFile['summaries'].attrs['struct_labels']
     else:
         labels = hFile['summaries'].attrs['func_labels']
 
-    return labels, atleast_5d(hFile[data_loc][()])  # [()] makes it numpy array
+    return labels, data
 
 
 def get_data(parent_folder, tag, file_name):
