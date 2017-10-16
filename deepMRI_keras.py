@@ -3,6 +3,7 @@ from keras.models import Model
 import keras.backend as K
 import tensorflow as tf
 
+from keras import optimizers
 
 def deep_mri_net(input_shape, conv_params, max_pool_params, fc_params, dropout_params, output_params,
                        input_dtype=K.floatx()):
@@ -86,13 +87,23 @@ def init_network(n_classes=2, input_shape=(61, 73, 61, 1)):
 
     input_dtype = K.floatx()
 
+    # conv_params = [
+    #     {'filters': 32, 'kernel_size': (5, 5, 5), 'strides': (1, 1, 1)},
+    #     {'filters': 16, 'kernel_size': (3, 3, 3), 'strides': (1, 1, 1)},
+    #     {'filters': 8, "kernel_size": (3, 3, 3), "strides": (1, 1, 1)},
+    #     {'filters': 4, "kernel_size": (3, 3, 3), "strides": (1, 1, 1)},
+    #     {'filters': 2, "kernel_size": (3, 3, 3), "strides": (1, 1, 1)}
+    # ]
+
     conv_params = [
-        {'filters': 32, 'kernel_size': (5, 5, 5), 'strides': (1, 1, 1)},
-        {'filters': 16, 'kernel_size': (3, 3, 3), 'strides': (1, 1, 1)},
+        {'filters': 64, 'kernel_size': (5, 5, 5), 'strides': (1, 1, 1)},
+        {'filters': 32, 'kernel_size': (3, 3, 3), 'strides': (1, 1, 1)},
+        {'filters': 16, "kernel_size": (3, 3, 3), "strides": (1, 1, 1)},
         {'filters': 8, "kernel_size": (3, 3, 3), "strides": (1, 1, 1)},
-        {'filters': 4, "kernel_size": (3, 3, 3), "strides": (1, 1, 1)},
-        {'filters': 2, "kernel_size": (3, 3, 3), "strides": (1, 1, 1)}
+        {'filters': 4, "kernel_size": (3, 3, 3), "strides": (1, 1, 1)}
     ]
+
+
     maxpooling_params = [
         {'pool_size': (4, 4, 4), 'strides': (1, 1, 1)},
         {'pool_size': (4, 4, 4), 'strides': (1, 1, 1)},
@@ -102,9 +113,9 @@ def init_network(n_classes=2, input_shape=(61, 73, 61, 1)):
 
     ]
     fc_params = [
-        {'units': 200},
-        {'units': 100},
-        {'units': 50}
+        {'units': 500}, # 200
+        {'units': 200}, # 100
+        {'units': 100}  # 50
     ]
 
     output_params = [
@@ -117,15 +128,16 @@ def init_network(n_classes=2, input_shape=(61, 73, 61, 1)):
     # loss = ['categorical_crossentropy', 'mean_squared_error']
     # loss_weights = [1., 0.001]
 
-    dropout_params = None
+    # dropout_params = None
     # dropout_params = {1: 0.9, 2: 0.5}
     # dropout_params = {1: 0.5, 2: 0.3}
-    # dropout_params = {1: 0.9}
+    dropout_params = {1: 0.5}
     # dropout_params = {1: 0.5, 2: 0.5, 3: 0.5}
 
     model = deep_mri_net(input_shape, conv_params, maxpooling_params, fc_params, dropout_params, output_params,
-                               input_dtype)
-    model.compile(optimizer='adam', loss=loss, metrics=['accuracy', balanced_accuracy], loss_weights=loss_weights)
+                         input_dtype)
+    optimizer = optimizers.Adam(lr=1e-8)
+    model.compile(optimizer=optimizer, loss=loss, metrics=['accuracy', balanced_accuracy], loss_weights=loss_weights)
     model.summary()
     return model
 
