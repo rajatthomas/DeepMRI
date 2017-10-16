@@ -20,7 +20,7 @@ def atleast_5d(arr):
 
 
 def get_func_labels():
-    return ['alff', 'degree_weighted', 'eigenvector_weighted', 'falff', 'lfcd']
+    return ['entropy', 'autocorr', 'alff', 'degree_weighted', 'eigenvector_weighted', 'falff', 'lfcd']
 
 
 def load_data(data_folder, h5_filename, metric='entropy', standardize_subjects=False):
