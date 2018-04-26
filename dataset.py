@@ -2,6 +2,8 @@ from torch.utils.data import Dataset
 import os.path as osp
 import numpy as np
 import torch
+import h5py as h5
+from sklearn.model_selection import train_test_split
 
 class PAC_data(Dataset):
 
@@ -12,8 +14,15 @@ class PAC_data(Dataset):
         :param split: train | val | test
         :param transform: NotImplemented
         """
-        data_file = osp.join(opt.root_path, opt.data_file)
-        all_data = np.load(data_file)
+        data_file = h5.File(osp.join(opt.root_path, opt.data_file), 'r')
+
+        all_data = np.squeeze(data_file[osp.join('summaries', 'data_{}'.format(opt.metric))])
+        # np.squeeze is used because the HDF5 was created using an extra trailing dimension (for keras)
+
+        if metric == 'structural':
+            y = data_file['summaries'].attrs['struct_labels']
+        else:
+            y = data_file['summaries'].attrs['func_labels']
 
         data = all_data[split]
 
