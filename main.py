@@ -24,6 +24,11 @@ if __name__ == '__main__':
 
     opt.arch = '{}-{}'.format(opt.model, opt.model_depth)
     print(opt)
+
+    opt.result_path = os.path.join(opt.result_path, opt.metric)
+    if not os.path.exists(opt.result_path):
+        os.makedirs(opt.result_path)
+
     with open(os.path.join(opt.result_path, 'opts.json'), 'w') as opt_file:
         json.dump(vars(opt), opt_file)
 
