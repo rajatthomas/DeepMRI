@@ -15,7 +15,7 @@ def parse_opts():
         help='Numpy binary file with train, test and validation datasets')
     parser.add_argument(
         '--result_path',
-        default='/data_local/data/ABIDE_output',
+        default='/data_local/deeplearning/data/ABIDE_output',
         type=str,
         help='Result directory path')
     parser.add_argument(
@@ -63,7 +63,7 @@ def parse_opts():
         help='Patience of LR scheduler. See documentation of ReduceLROnPlateau.'
     )
     parser.add_argument(
-        '--batch_size', default=12, type=int, help='Batch Size')
+        '--batch_size', default=4, type=int, help='Batch Size')
     parser.add_argument(
         '--n_epochs',
         default=70,
@@ -131,12 +131,12 @@ def parse_opts():
         'If 1, range of inputs is [0-255]. If 255, range of inputs is [0-1].')
     parser.add_argument(
         '--model',
-        default='densenet',
+        default='resnet',
         type=str,
         help='(resnet | preresnet | wideresnet | resnext | densenet | ')
     parser.add_argument(
         '--model_depth',
-        default=121,
+        default=34,
         type=int,
         help='Depth of resnet (10 | 18 | 34 | 50 | 101) Depth of densenet (121 | 169 | 201 | 264)')
     parser.add_argument(

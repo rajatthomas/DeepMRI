@@ -19,7 +19,7 @@ class PAC_data(Dataset):
         all_data = np.squeeze(data_file[osp.join('summaries', 'data_{}'.format(opt.metric))])
         # np.squeeze is used because the HDF5 was created using an extra trailing dimension (for keras)
 
-        if metric == 'structural':
+        if opt.metric == 'structural':
             y = data_file['summaries'].attrs['struct_labels']
         else:
             y = data_file['summaries'].attrs['func_labels']
