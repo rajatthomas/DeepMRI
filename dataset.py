@@ -39,8 +39,6 @@ class PAC_data(Dataset):
             data = X_test
             labels = y_test
 
-        data = all_data[split]
-
         if opt.standardize:
 
             mask = all_data['mask_3d']
