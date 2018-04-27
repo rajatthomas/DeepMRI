@@ -5,19 +5,24 @@ def parse_opts():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--root_path',
-        default='/data_local/deeplearning/PAC_competition/numpy_data', # '/data_local/deeplearning/DeepNeurologe/',  # '/data_local/deeplearning/PAC_competition/numpy_data',
+        default='/data_local/deeplearning/data/ABIDE_hdf5', # '/data_local/deeplearning/DeepNeurologe/',  # '/data_local/deeplearning/PAC_competition/numpy_data',
         type=str,
         help='Root directory path of data')
     parser.add_argument(
         '--data_file',
-        default='data4mm.npz', # ''data_6mm.npz',  # 'data4mm.npz', # data.npz (data for PAC competition 2mm resolution)
+        default='fmri_summary.hdf5', # ''data_6mm.npz',  # 'data4mm.npz', # data.npz (data for PAC competition 2mm resolution)
         type=str,
         help='Numpy binary file with train, test and validation datasets')
     parser.add_argument(
         '--result_path',
-        default='/data_local/deeplearning/PAC_competition/deep_results', # '/data_local/deeplearning/DeepNeurologe/deep_results',  # ''/data_local/deeplearning/PAC_competition/deep_results',
+        default='/data_local/data/ABIDE_output',
         type=str,
         help='Result directory path')
+    parser.add_argument(
+        '--metric',
+        default='alff',
+        type=str,
+        help='alff | autocorr | eigenvector_weighted | entropy | falff | lfcd | structural')
     parser.add_argument(
         '--n_classes',
         default=2,

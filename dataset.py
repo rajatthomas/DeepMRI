@@ -55,9 +55,6 @@ class PAC_data(Dataset):
                 data[i_subj] = mask * (data_subj - mean_subj) / std_subj
 
         self.data = torch.from_numpy(np.expand_dims(data, axis=1)).type(torch.FloatTensor)
-
-
-
         self.labels = torch.from_numpy(labels).type(torch.LongTensor)
 
     def __len__(self):
