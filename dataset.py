@@ -24,6 +24,21 @@ class PAC_data(Dataset):
         else:
             y = data_file['summaries'].attrs['func_labels']
 
+        X_train, X_test, y_train, y_test = train_test_split(all_data, y, test_size=100, stratify=y, random_state=42)
+        X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=100, stratify=y_train, random_state=42)
+
+        if split == 'train_3d':
+            data = X_train
+            labels = y_train
+
+        if split == 'valid_3d':
+            data = X_val
+            labels = y_val
+
+        if split == 'test_3d':
+            data = X_test
+            labels = y_test
+
         data = all_data[split]
 
         if opt.standardize:
@@ -41,14 +56,9 @@ class PAC_data(Dataset):
 
         self.data = torch.from_numpy(np.expand_dims(data, axis=1)).type(torch.FloatTensor)
 
-        if split == 'train_3d':
-            y_split = 'y_train'
-        if split == 'valid_3d':
-            y_split = 'y_valid'
-        if split == 'test_3d':
-            y_split = 'y_test'
 
-        self.labels = torch.from_numpy(all_data[y_split]).type(torch.LongTensor)
+
+        self.labels = torch.from_numpy(labels).type(torch.LongTensor)
 
     def __len__(self):
         return self.data.shape[0]

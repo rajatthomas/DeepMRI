@@ -31,7 +31,7 @@ def parse_opts():
         type=int,
         help='tuple of x-, y- and z- dimensions, e.g., (109, 91, 109)')
     parser.add_argument(
-        '--standardize', action='store_true', help='standardize across subject dimension')
+        '--standardize', action='store_false', help='standardize across subject dimension')
     parser.add_argument(
         '--learning_rate',
         default=0.1,
