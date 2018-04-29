@@ -20,7 +20,7 @@ def parse_opts():
         help='Result directory path')
     parser.add_argument(
         '--metric',
-        default='alff',
+        default='autocorr',
         type=str,
         help='alff | autocorr | eigenvector_weighted | entropy | falff | lfcd | structural')
     parser.add_argument(
@@ -58,7 +58,7 @@ def parse_opts():
         help='Currently only support SGD')
     parser.add_argument(
         '--lr_patience',
-        default=50,
+        default=100,
         type=int,
         help='Patience of LR scheduler. See documentation of ReduceLROnPlateau.'
     )
@@ -66,7 +66,7 @@ def parse_opts():
         '--batch_size', default=4, type=int, help='Batch Size')
     parser.add_argument(
         '--n_epochs',
-        default=70,
+        default=500,
         type=int,
         help='Number of total epochs to run')
     parser.add_argument(
@@ -136,7 +136,7 @@ def parse_opts():
         help='(resnet | preresnet | wideresnet | resnext | densenet | ')
     parser.add_argument(
         '--model_depth',
-        default=34,
+        default=101,
         type=int,
         help='Depth of resnet (10 | 18 | 34 | 50 | 101) Depth of densenet (121 | 169 | 201 | 264)')
     parser.add_argument(
