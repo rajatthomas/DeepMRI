@@ -22,8 +22,6 @@ if __name__ == '__main__':
     if opt.resume_path:
         opt.resume_path = os.path.join(opt.root_path, opt.resume_path)
 
-    opt.arch = '{}-{}'.format(opt.model, opt.model_depth)
-    print(opt)
 
     all_metrics = ['alff', 'autocorr', 'eigenvector', 'weighteD', 'entropy', 'falff', 'lfcd']
     all_models = ['resnet', 'densenet']
@@ -38,9 +36,12 @@ if __name__ == '__main__':
 
             for opt.model_depth in all_model_depths:
 
-                dir_name = opt.metric + '-' + opt.model_depth
+                opt.arch = '{}-{}'.format(opt.model, opt.model_depth)
+                print(opt)
 
+                dir_name = opt.metric + '-' + opt.model + str(opt.model_depth)
                 opt.result_path = os.path.join(opt.result_path, dir_name)
+
                 if not os.path.exists(opt.result_path):
                     os.makedirs(opt.result_path)
 
