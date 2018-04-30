@@ -212,7 +212,7 @@ class DenseNet(nn.Module):
         last_size = int(math.floor(size_x / 32))
         out = F.avg_pool3d(
             #out, kernel_size=(last_duration, last_size, last_size)).view(
-            out, kernel_size=(2, 1, 1)).view(
+            out, kernel_size=(3, 2, 2)).view(              # ABIDE data with size (61, 73, 61) -> kernel_size = (3,2,2)
                 features.size(0), -1)
         out = self.classifier(out)
         return out

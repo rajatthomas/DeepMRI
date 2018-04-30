@@ -22,9 +22,8 @@ if __name__ == '__main__':
     if opt.resume_path:
         opt.resume_path = os.path.join(opt.root_path, opt.resume_path)
 
-
-    all_metrics = ['alff', 'autocorr', 'eigenvector', 'weighteD', 'entropy', 'falff', 'lfcd']
-    all_models = ['resnet', 'densenet']
+    all_metrics = ['autocorr', 'eigenvector', 'weighteD', 'entropy', 'falff', 'lfcd', 'alff']
+    all_models = ['densenet', 'resnet'] #   ['resnet', 'densenet']
 
     for opt.metric in all_metrics:
         for opt.model in all_models:
@@ -36,6 +35,7 @@ if __name__ == '__main__':
 
             for opt.model_depth in all_model_depths:
 
+                opt.result_path = '/data_local/deeplearning/data/ABIDE_output'
                 opt.arch = '{}-{}'.format(opt.model, opt.model_depth)
                 print(opt)
 
