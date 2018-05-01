@@ -22,8 +22,8 @@ if __name__ == '__main__':
     if opt.resume_path:
         opt.resume_path = os.path.join(opt.root_path, opt.resume_path)
 
-    all_metrics = ['autocorr', 'eigenvector', 'weighteD', 'entropy', 'falff', 'lfcd', 'alff']
-    all_models = ['densenet', 'resnet'] #   ['resnet', 'densenet']
+    all_metrics = ['alff', 'autocorr', 'degree_weighted', 'eigenvector_weighted', 'entropy', 'falff', 'lfcd']
+    all_models = ['resnet', 'densenet']
 
     for opt.metric in all_metrics:
         for opt.model in all_models:
